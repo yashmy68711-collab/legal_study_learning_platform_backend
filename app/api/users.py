@@ -34,9 +34,7 @@ router = APIRouter(
 def get_users(
     db: Session = Depends(get_db)
 ):
-    users = db.query(User).all()
-
-    return users
+    return db.query(User).all()
 
 
 # =========================================================
@@ -53,7 +51,7 @@ def create_user(
     db: Session = Depends(get_db)
 ):
 
-    # Check whether email already exists
+    # Check if email already exists
     existing_user = (
         db.query(User)
         .filter(User.email == user.email)
@@ -67,11 +65,9 @@ def create_user(
         )
 
     # Hash password
-    hashed_password = hash_password(
-        user.password
-    )
+    hashed_password = hash_password(user.password)
 
-    # Create database user
+    # Create user
     new_user = User(
         name=user.name,
         email=user.email,
@@ -98,7 +94,6 @@ def login(
     db: Session = Depends(get_db)
 ):
 
-    # Find user
     existing_user = (
         db.query(User)
         .filter(User.email == user.email)
@@ -111,7 +106,6 @@ def login(
             detail="Invalid email or password"
         )
 
-    # Verify password
     password_valid = verify_password(
         user.password,
         existing_user.password
@@ -123,7 +117,6 @@ def login(
             detail="Invalid email or password"
         )
 
-    # Create JWT token
     access_token = create_access_token(
         data={
             "sub": str(existing_user.id),
@@ -136,14 +129,27 @@ def login(
         "token_type": "bearer"
     }
 
-@router.get("/me")
+
+# =========================================================
+# GET CURRENT USER
+# =========================================================
+
+@router.get(
+    "/me",
+    response_model=UserResponse
+)
 def get_current_user(
     token_data: dict = Depends(verify_access_token),
     db: Session = Depends(get_db)
 ):
+
     user_id = int(token_data["sub"])
 
-    user = db.query(User).filter(User.id == user_id).first()
+    user = (
+        db.query(User)
+        .filter(User.id == user_id)
+        .first()
+    )
 
     if not user:
         raise HTTPException(
@@ -151,8 +157,4 @@ def get_current_user(
             detail="User not found"
         )
 
-    return {
-        "id": user.id,
-        "name": user.name,
-        "email": user.email
-    }
+    return user

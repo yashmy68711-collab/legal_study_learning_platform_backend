@@ -2,20 +2,18 @@ from fastapi import FastAPI
 from sqlalchemy import text
 
 from app.db.database import Base, engine
+
+# Models
 from app.models.user import User
-from app.api.users import router as users_router
+from app.models.category import Category
+from app.models.topic import Topic
 
-
-# =========================================================
-# CREATE DATABASE TABLES
-# =========================================================
+# Routers
+from app.api.routes.users import router as users_router
+from app.api.routes.categories import router as categories_router
+from app.api.routes.topics import router as topics_router
 
 Base.metadata.create_all(bind=engine)
-
-
-# =========================================================
-# FASTAPI APPLICATION
-# =========================================================
 
 app = FastAPI(
     title="Legal Learning Platform API",
@@ -23,17 +21,12 @@ app = FastAPI(
     version="1.0.0"
 )
 
-
-# =========================================================
-# USERS ROUTER
-# =========================================================
-
 app.include_router(users_router)
 
+app.include_router(categories_router)
 
-# =========================================================
-# ROOT
-# =========================================================
+
+app.include_router(topics_router)
 
 @app.get("/")
 def root():
@@ -42,10 +35,6 @@ def root():
         "message": "Legal Learning Platform Backend is running"
     }
 
-
-# =========================================================
-# DATABASE TEST
-# =========================================================
 
 @app.get("/db-test")
 def db_test():

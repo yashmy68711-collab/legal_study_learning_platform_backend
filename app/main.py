@@ -37,3 +37,22 @@ def root():
 
 
 @app.get("/db-test")
+def db_test():
+
+    try:
+
+        with engine.connect() as connection:
+
+            connection.execute(text("SELECT 1"))
+
+        return {
+            "status": "success",
+            "message": "Database connection successful!"
+        }
+
+    except Exception as e:
+
+        return {
+            "status": "error",
+            "message": str(e)
+        }
